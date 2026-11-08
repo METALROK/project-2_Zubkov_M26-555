@@ -13,7 +13,7 @@ def load_metadata(filepath: str) -> dict:
     except FileNotFoundError:
         return {}
 
-def save_metadata(filepath, data):
+def save_metadata(filepath: str, data: dict):
     """
     Сохраняет метаданные в JSON-файл.
     """
