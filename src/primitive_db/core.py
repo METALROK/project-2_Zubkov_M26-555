@@ -10,7 +10,7 @@ def create_table(metadata: dict, table_name: str, columns: list) -> dict:
 
     table_columns = {"ID": "int"}
     for column in columns:
-        name,sep, col_type = column.partition(":")
+        name, sep, col_type = column.partition(":")
         if not sep or not name or col_type not in VALID_TYPES or name in table_columns:
             print(f"Некорректное значение: {column}.")
             return metadata
@@ -32,15 +32,3 @@ def drop_table(metadata: dict, table_name: str) -> dict:
     del metadata[table_name]
     print(f"Таблица '{table_name}' успешно удалена.")
     return metadata
-
-def list_tables(metadata: dict):
-    """
-    Печатает список всех таблиц.
-    """
-    if not metadata:
-        print("Таблиц пока нет.")
-        return
-
-    for table_name in metadata:
-        print(f"- {table_name}") 
-
