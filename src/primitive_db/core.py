@@ -1,14 +1,16 @@
 VALID_TYPES = {"int", "str", "bool"}
 
+
 def create_table(metadata: dict, table_name: str, columns: list) -> dict:
     """
-    Создает таблицу.
+    Создаёт таблицу.
     """
     if table_name in metadata:
-        print(f"Ошибка: таблица '{table_name}' уже существует.")
+        print(f'Ошибка: Таблица "{table_name}" уже существует.')
         return metadata
 
     table_columns = {"ID": "int"}
+
     for column in columns:
         name, sep, col_type = column.partition(":")
         if not sep or not name or col_type not in VALID_TYPES or name in table_columns:
@@ -17,8 +19,9 @@ def create_table(metadata: dict, table_name: str, columns: list) -> dict:
         table_columns[name] = col_type
 
     metadata[table_name] = table_columns
-    columns_str = ", ".join(f"{n}:{t}" for n, t in table_columns.items())
-    print(f"Таблица '{table_name}' успешно создана со столбцами {columns_str}")
+
+    columns_str = ", ".join(f"{name}:{type_}" for name, type_ in table_columns.items())
+    print(f'Таблица "{table_name}" успешно создана со столбцами: {columns_str}')
     return metadata
 
 def drop_table(metadata: dict, table_name: str) -> dict:
@@ -26,9 +29,20 @@ def drop_table(metadata: dict, table_name: str) -> dict:
     Удаляет таблицу из метаданных.
     """
     if table_name not in metadata:
-        print(f"Ошибка: таблица '{table_name}' не существует.")
+        print(f'Ошибка: Таблица "{table_name}" не существует.')
         return metadata
 
     del metadata[table_name]
-    print(f"Таблица '{table_name}' успешно удалена.")
+    print(f'Таблица "{table_name}" успешно удалена.')
     return metadata
+
+def list_tables(metadata):
+    """
+    Выводит список всех таблиц.
+    """
+    if not metadata:
+        print("Таблиц пока нет.")
+        return
+
+    for table_name in metadata:
+        print(f"- {table_name}")
