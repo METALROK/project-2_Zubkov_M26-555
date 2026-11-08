@@ -62,7 +62,7 @@ uv run project
 
 ### Демонстрация
 
-[![asciicast](https://asciinema.org/a/AbC123xyz.svg)](https://asciinema.org/a/Gh2kVjJW96cot6pI)
+[![asciicast](https://asciinema.org/a/Gh2kVjJW96cot6pI.svg)](https://asciinema.org/a/Gh2kVjJW96cot6pI)
 
 ## Важное замечание 
 
