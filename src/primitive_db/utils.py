@@ -43,7 +43,7 @@ def _table_path(table_name: str) -> str:
     """
     return os.path.join(DATA_DIR, f"{table_name}.json")
 
-def load_table_data(table_name: str):
+def load_table_data(table_name: str) -> dict:
     """
     Загружает записи таблицы.
 
@@ -51,9 +51,18 @@ def load_table_data(table_name: str):
     """
     return _load_json(_table_path(table_name), [])
 
-def save_table_data(table_name, data):
+def save_table_data(table_name: str, data: dict):
     """
     Сохраняет записи таблицы.
     """
     os.makedirs(DATA_DIR, exist_ok=True)
     _save_json(_table_path(table_name), data)
+
+def delete_table_data(table_name: str):
+    """
+    Удаляет файл данных таблицы, если он существует.
+    """
+    try:
+        os.remove(_table_path(table_name))
+    except FileNotFoundError:
+        pass

@@ -1,4 +1,4 @@
-from utils import load_table_data
+from primitive_db.utils import load_table_data
 
 VALID_TYPES = {"int", "str", "bool"}
 TYPE_MAP = {"int": int, "str": str, "bool": bool}
