@@ -21,3 +21,5 @@ bin-release/
 dist/
 __pycache__/
 *.egg-info
+
+data/
