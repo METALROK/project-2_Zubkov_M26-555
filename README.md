@@ -114,7 +114,7 @@ uv run project
 
 ### Демонстрация
 
-[![asciicast](https://asciinema.org/a/ВАШ_ID.svg)](https://asciinema.org/a/ВАШ_ID)
+[![asciicast](https://asciinema.org/a/mBPvbHVXjptoA5Po.svg)](https://asciinema.org/a/mBPvbHVXjptoA5Po)
 
 ## Важное замечание 
 
