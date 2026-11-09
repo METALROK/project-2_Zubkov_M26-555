@@ -60,7 +60,7 @@ uv run project
 - Неизвестная команда: `Функции <команда> нет.`
 - Некорректные аргументы (неподдерживаемый тип, неверный формат столбца, отсутствующее имя таблицы): `Некорректное значение: <значение>.`
 
-### Демонстрация
+### Демонстрация (может прогружаться несколько секунд)
 
 [![asciicast](https://asciinema.org/a/Gh2kVjJW96cot6pI.svg)](https://asciinema.org/a/Gh2kVjJW96cot6pI)
 
@@ -112,7 +112,7 @@ uv run project
 Количество записей: 0
 ```
 
-### Демонстрация
+### Демонстрация (может прогружаться несколько секунд)
 
 [![asciicast](https://asciinema.org/a/mBPvbHVXjptoA5Po.svg)](https://asciinema.org/a/mBPvbHVXjptoA5Po)
 
