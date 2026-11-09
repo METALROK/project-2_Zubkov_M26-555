@@ -1,6 +1,7 @@
 from utils import load_table_data
 
 VALID_TYPES = {"int", "str", "bool"}
+TYPE_MAP = {"int": int, "str": str, "bool": bool}
 
 
 def create_table(metadata: dict, table_name: str, columns: list) -> dict:
@@ -49,27 +50,18 @@ def list_tables(metadata):
     for table_name in metadata:
         print(f"- {table_name}")
 
-def convert_value(value: int | str | bool, column_type: str) -> int | str | bool:
+def convert_value(
+        value: int | str | bool,
+        column_type: int | str | bool
+        ) -> int | str | bool:
     """
-    Приводит строковое значение к типу столбца.
+    Проверяет, что значение соответствует типу столбца.
 
-    При ошибке выбрасывает ValueError.
+    Иначе выбрасывает ValueError.
     """
-    if column_type == "int":
-        try:
-            return int(value)
-        except ValueError:
-            raise ValueError(value) from None
-
-    if column_type == "bool":
-        lowered = str(value).lower()
-        if lowered == "true":
-            return True
-        if lowered == "false":
-            return False
+    if type(value) is not TYPE_MAP[column_type]:
         raise ValueError(value)
-
-    return str(value)
+    return value
 
 def cast_clause(metadata: dict, table_name: str, clause: dict) -> dict:
     """

@@ -1,9 +1,8 @@
 import shlex
 
 import prompt
-
-from primitive_db.core import create_table, drop_table, list_tables
-from primitive_db.utils import load_metadata, save_metadata
+from core import create_table, drop_table, list_tables
+from utils import load_metadata, save_metadata
 
 META_FILE = "db_meta.json"
 COMMANDS = {"create_table", "drop_table", "list_tables", "help", "exit"}
