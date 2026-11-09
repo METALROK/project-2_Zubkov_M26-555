@@ -14,6 +14,7 @@ from primitive_db.core import (
     select,
     update,
 )
+from primitive_db.decorators import handle_db_errors
 from primitive_db.parser import parse_set, parse_values, parse_where
 from primitive_db.utils import (
     delete_table_data,
@@ -101,6 +102,7 @@ def print_rows(columns: list, rows: list):
         table.add_row([row.get(column) for column in columns])
     print(table)
 
+@handle_db_errors
 def handle_insert(metadata: dict, user_input: str):
     """
     Реализация insert.
@@ -112,6 +114,7 @@ def handle_insert(metadata: dict, user_input: str):
     if table_data is not None:
         save_table_data(table_name, table_data)
 
+@handle_db_errors
 def handle_select(metadata: dict, user_input: str):
     """
     Реализация select.
@@ -127,6 +130,7 @@ def handle_select(metadata: dict, user_input: str):
     rows = select(load_table_data(table_name), where)
     print_rows(metadata[table_name], rows)
 
+@handle_db_errors
 def handle_update(metadata: dict, user_input: str):
     """
     Реализация update.
@@ -151,6 +155,7 @@ def handle_update(metadata: dict, user_input: str):
     for record_id in matched_ids:
         print(f'Запись с ID={record_id} в таблице "{table_name}" успешно обновлена.')
 
+@handle_db_errors
 def handle_delete(metadata: dict, user_input: str):
     """
     Реализация delete.
@@ -186,6 +191,7 @@ def handle_info(metadata: dict, table_name: str):
     print(f"Столбцы: {columns}")
     print(f"Количество записей: {len(load_table_data(table_name))}")
 
+@handle_db_errors
 def handle_simple_command(metadata: dict, user_input: str):
     """
     Команды без кавычек и выражений.
@@ -199,10 +205,12 @@ def handle_simple_command(metadata: dict, user_input: str):
         case ["list_tables"]:
             list_tables(metadata)
         case ["create_table", table_name, *columns]:
-            save_metadata(META_FILE, create_table(metadata, table_name, columns))
+            create_table(metadata, table_name, columns)
+            save_metadata(META_FILE, metadata)
         case ["drop_table", table_name]:
             existed = table_name in metadata
-            save_metadata(META_FILE, drop_table(metadata, table_name))
+            drop_table(metadata, table_name)
+            save_metadata(META_FILE, metadata)
             if existed:
                 delete_table_data(table_name)
         case ["info", table_name]:
@@ -224,23 +232,20 @@ def run():
 
         command = user_input.split()[0].lower()
 
-        try:
-            match command:
-                case "exit":
-                    return
-                case "help":
-                    print_help()
-                case "insert":
-                    handle_insert(metadata, user_input)
-                case "select":
-                    handle_select(metadata, user_input)
-                case "update":
-                    handle_update(metadata, user_input)
-                case "delete":
-                    handle_delete(metadata, user_input)
-                case "create_table" | "drop_table" | "list_tables" | "info":
-                    handle_simple_command(metadata, user_input)
-                case _:
-                    print(f"Функции {command} нет.")
-        except ValueError as error:
-            print(f"Некорректное значение: {error}.")
+        match command:
+            case "exit":
+                return
+            case "help":
+                print_help()
+            case "insert":
+                handle_insert(metadata, user_input)
+            case "select":
+                handle_select(metadata, user_input)
+            case "update":
+                handle_update(metadata, user_input)
+            case "delete":
+                handle_delete(metadata, user_input)
+            case "create_table" | "drop_table" | "list_tables" | "info":
+                handle_simple_command(metadata, user_input)
+            case _:
+                print(f"Функции {command} нет.")
