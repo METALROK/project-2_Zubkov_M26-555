@@ -17,6 +17,7 @@ from primitive_db.core import (
 from primitive_db.decorators import handle_db_errors
 from primitive_db.parser import parse_set, parse_values, parse_where
 from primitive_db.utils import (
+    create_cacher,
     delete_table_data,
     load_metadata,
     load_table_data,
@@ -30,6 +31,8 @@ INSERT_RE = re.compile(r"^insert\s+into\s+(\S+)\s+values\s*(\(.*\))$", re.IGNORE
 SELECT_RE = re.compile(r"^select\s+from\s+(\S+)(?:\s+where\s+(.+))?$", re.IGNORECASE)
 UPDATE_RE = re.compile(r"^update\s+(\S+)\s+set\s+(.+?)\s+where\s+(.+)$", re.IGNORECASE)
 DELETE_RE = re.compile(r"^delete\s+from\s+(\S+)\s+where\s+(.+)$", re.IGNORECASE)
+
+select_cache = create_cacher()
 
 
 def print_help():
@@ -113,6 +116,7 @@ def handle_insert(metadata: dict, user_input: str):
     table_data = insert(metadata, table_name, values)
     if table_data is not None:
         save_table_data(table_name, table_data)
+        select_cache.clear()
 
 @handle_db_errors
 def handle_select(metadata: dict, user_input: str):
@@ -127,7 +131,8 @@ def handle_select(metadata: dict, user_input: str):
     if where_text:
         where = cast_clause(metadata, table_name, parse_where(where_text))
 
-    rows = select(load_table_data(table_name), where)
+    cache_key = (table_name, tuple(sorted(where.items())) if where else None)
+    rows = select_cache(cache_key, lambda: select(load_table_data(table_name), where))
     print_rows(metadata[table_name], rows)
 
 @handle_db_errors
@@ -152,6 +157,7 @@ def handle_update(metadata: dict, user_input: str):
 
     table_data = update(table_data, set_clause, where)
     save_table_data(table_name, table_data)
+    select_cache.clear()
     for record_id in matched_ids:
         print(f'Запись с ID={record_id} в таблице "{table_name}" успешно обновлена.')
 
@@ -177,6 +183,7 @@ def handle_delete(metadata: dict, user_input: str):
         return
 
     save_table_data(table_name, table_data)
+    select_cache.clear()
     for record_id in matched_ids:
         print(f'Запись с ID={record_id} успешно удалена из таблицы "{table_name}".')
 
@@ -216,6 +223,7 @@ def handle_simple_command(metadata: dict, user_input: str):
             if drop_table(metadata, table_name) is not None:
                 save_metadata(META_FILE, metadata)
                 delete_table_data(table_name)
+                select_cache.clear()
         case ["info", table_name]:
             handle_info(metadata, table_name)
         case _:
