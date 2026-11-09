@@ -1,9 +1,9 @@
-import re
 import shlex
 
 import prompt
 from prettytable import PrettyTable
 
+from primitive_db.constants import ID_COLUMN, META_FILE
 from primitive_db.core import (
     cast_clause,
     create_table,
@@ -14,23 +14,23 @@ from primitive_db.core import (
     select,
     update,
 )
-from primitive_db.decorators import handle_db_errors
-from primitive_db.parser import parse_set, parse_values, parse_where
+from primitive_db.decorators import create_cacher, handle_db_errors
+from primitive_db.parser import (
+    parse_delete,
+    parse_insert,
+    parse_select,
+    parse_set,
+    parse_update,
+    parse_values,
+    parse_where,
+)
 from primitive_db.utils import (
-    create_cacher,
     delete_table_data,
     load_metadata,
     load_table_data,
     save_metadata,
     save_table_data,
 )
-
-META_FILE = "db_meta.json"
-
-INSERT_RE = re.compile(r"^insert\s+into\s+(\S+)\s+values\s*(\(.*\))$", re.IGNORECASE)
-SELECT_RE = re.compile(r"^select\s+from\s+(\S+)(?:\s+where\s+(.+))?$", re.IGNORECASE)
-UPDATE_RE = re.compile(r"^update\s+(\S+)\s+set\s+(.+?)\s+where\s+(.+)$", re.IGNORECASE)
-DELETE_RE = re.compile(r"^delete\s+from\s+(\S+)\s+where\s+(.+)$", re.IGNORECASE)
 
 select_cache = create_cacher()
 
@@ -71,17 +71,6 @@ def print_help():
     print("<command> exit - выход из программы")
     print("<command> help - справочная информация\n")
 
-def _match(pattern: re.Pattern, user_input: str) -> tuple:
-    """
-    Сопоставляет ввод с шаблоном команды.
-
-    Если не подходит, выбрасывает ValueError.
-    """
-    match = pattern.match(user_input)
-    if not match:
-        raise ValueError(user_input)
-    return match.groups()
-
 def _table_exists(metadata: dict, table_name: str) -> bool:
     """
     Проверяет существование таблицы.
@@ -110,10 +99,8 @@ def handle_insert(metadata: dict, user_input: str):
     """
     Реализация insert.
     """
-    table_name, values_text = _match(INSERT_RE, user_input)
-    values = parse_values(values_text)
-
-    table_data = insert(metadata, table_name, values)
+    table_name, values_text = parse_insert(user_input)
+    table_data = insert(metadata, table_name, parse_values(values_text))
     if table_data is not None:
         save_table_data(table_name, table_data)
         select_cache.clear()
@@ -123,7 +110,7 @@ def handle_select(metadata: dict, user_input: str):
     """
     Реализация select.
     """
-    table_name, where_text = _match(SELECT_RE, user_input)
+    table_name, where_text = parse_select(user_input)
     if not _table_exists(metadata, table_name):
         return
 
@@ -140,17 +127,17 @@ def handle_update(metadata: dict, user_input: str):
     """
     Реализация update.
     """
-    table_name, set_text, where_text = _match(UPDATE_RE, user_input)
+    table_name, set_text, where_text = parse_update(user_input)
     if not _table_exists(metadata, table_name):
         return
 
     set_clause = cast_clause(metadata, table_name, parse_set(set_text))
-    if "ID" in set_clause:
-        raise ValueError("ID")
+    if ID_COLUMN in set_clause:
+        raise ValueError(ID_COLUMN)
     where = cast_clause(metadata, table_name, parse_where(where_text))
 
     table_data = load_table_data(table_name)
-    matched_ids = [record["ID"] for record in select(table_data, where)]
+    matched_ids = [record[ID_COLUMN] for record in select(table_data, where)]
     if not matched_ids:
         print("Записи не найдены.")
         return
@@ -166,14 +153,14 @@ def handle_delete(metadata: dict, user_input: str):
     """
     Реализация delete.
     """
-    table_name, where_text = _match(DELETE_RE, user_input)
+    table_name, where_text = parse_delete(user_input)
     if not _table_exists(metadata, table_name):
         return
 
     where = cast_clause(metadata, table_name, parse_where(where_text))
 
     table_data = load_table_data(table_name)
-    matched_ids = [record["ID"] for record in select(table_data, where)]
+    matched_ids = [record[ID_COLUMN] for record in select(table_data, where)]
     if not matched_ids:
         print("Записи не найдены.")
         return

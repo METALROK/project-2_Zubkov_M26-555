@@ -1,8 +1,6 @@
+from primitive_db.constants import TYPE_MAP, VALID_TYPES
 from primitive_db.decorators import confirm_action, handle_db_errors, log_time
 from primitive_db.utils import load_table_data
-
-VALID_TYPES = {"int", "str", "bool"}
-TYPE_MAP = {"int": int, "str": str, "bool": bool}
 
 
 @handle_db_errors
@@ -14,7 +12,7 @@ def create_table(metadata: dict, table_name: str, columns: list) -> dict:
         print(f'Ошибка: Таблица "{table_name}" уже существует.')
         return metadata
 
-    table_columns = {"ID": "int"}
+    table_columns = {"ID_COLUMN": "int"}
 
     for column in columns:
         name, sep, col_type = column.partition(":")
@@ -93,7 +91,7 @@ def insert(metadata: dict, table_name: str, values: list) -> list | None:
         return None
 
     columns = metadata[table_name]
-    data_columns = [name for name in columns if name != "ID"]
+    data_columns = [name for name in columns if name != "ID_COLUMN"]
 
     if len(values) != len(data_columns):
         print(
@@ -108,8 +106,8 @@ def insert(metadata: dict, table_name: str, values: list) -> list | None:
     }
 
     table_data = load_table_data(table_name)
-    new_id = max((row["ID"] for row in table_data), default=0) + 1
-    table_data.append({"ID": new_id, **record})
+    new_id = max((row["ID_COLUMN"] for row in table_data), default=0) + 1
+    table_data.append({"ID_COLUMN": new_id, **record})
 
     print(f'Запись с ID={new_id} успешно добавлена в таблицу "{table_name}".')
     return table_data

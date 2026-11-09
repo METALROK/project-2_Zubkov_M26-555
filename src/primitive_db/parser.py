@@ -1,4 +1,4 @@
-QUOTES = "\"'"
+from primitive_db.constants import QUOTES
 
 
 def _split_outside_quotes(text: str, separator: str=",") -> list:
@@ -87,3 +87,56 @@ def parse_values(text: str) -> list:
         return []
 
     return [parse_value(part) for part in _split_outside_quotes(inner)]
+
+def _strip_keyword(text: str, keyword: str) -> str:
+    """
+    Отрезает ключевое слово в начале строки.
+
+    Если его нет, выбрасывает ValueError.
+    """
+    text = text.strip()
+    if not text.startswith(keyword):
+        raise ValueError(text)
+    return text[len(keyword):].strip()
+
+def parse_insert(user_input: str) -> tuple:
+    """
+    Разбирает insert-запрос на составляющие.
+    """
+    words = user_input.split(maxsplit=3)
+    if len(words) != 4 or words[1] != "into":
+        raise ValueError(user_input)
+    return words[2], _strip_keyword(words[3], "values")
+
+def parse_select(user_input: str) -> tuple:
+    """
+    Разбирает select-запрос на составляющие.
+    """
+    words = user_input.split(maxsplit=3)
+    if len(words) < 3 or words[1] != "from":
+        raise ValueError(user_input)
+    where_text = _strip_keyword(words[3], "where") if len(words) == 4 else None
+    return words[2], where_text
+
+def parse_update(user_input: str) -> tuple:
+    """
+    Разбирает update-запрос на составляющие.
+    """
+    words = user_input.split(maxsplit=2)
+    if len(words) != 3:
+        raise ValueError(user_input)
+    set_text, separator, where_text = _strip_keyword(words[2], "set").partition(
+        " where "
+    )
+    if not separator:
+        raise ValueError(user_input)
+    return words[1], set_text, where_text
+
+def parse_delete(user_input: str) -> tuple:
+    """
+    Разбирает delete-запрос на составляющие.
+    """
+    words = user_input.split(maxsplit=3)
+    if len(words) != 4 or words[1] != "from":
+        raise ValueError(user_input)
+    return words[2], _strip_keyword(words[3], "where")
