@@ -1,12 +1,8 @@
 {
-    "test": {
+    "users": {
         "ID": "int",
         "name": "str",
         "age": "int",
         "is_active": "bool"
-    },
-    "my table": {
-        "ID": "int",
-        "title": "str"
     }
 }
