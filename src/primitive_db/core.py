@@ -1,4 +1,4 @@
-from primitive_db.decorators import handle_db_errors
+from primitive_db.decorators import confirm_action, handle_db_errors
 from primitive_db.utils import load_table_data
 
 VALID_TYPES = {"int", "str", "bool"}
@@ -29,6 +29,7 @@ def create_table(metadata: dict, table_name: str, columns: list) -> dict:
     return metadata
 
 @handle_db_errors
+@confirm_action("удаление таблицы")
 def drop_table(metadata: dict, table_name: str) -> dict:
     """
     Удаляет таблицу из метаданных.
@@ -129,6 +130,7 @@ def update(table_data: list, set_clause: dict, where_clause: dict) -> list:
             record.update(set_clause)
     return table_data
 
+@confirm_action("удаление таблицы")
 def delete(table_data: list, where_clause: dict) -> list:
     """
     Удаляет записи, подходящие под where_clause.

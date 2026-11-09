@@ -26,3 +26,25 @@ def handle_db_errors(func):
         return None
 
     return wrapper
+
+def confirm_action(action_name: str):
+    """
+    Фабрика декораторов: запрашивает подтверждение перед опасной операцией.
+
+    Если пользователь ввёл не 'y', операция отменяется и возвращается None.
+    """
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            answer = input(
+                f'Вы уверены, что хотите выполнить "{action_name}"? [y/n]: '
+            )
+            if answer.strip().lower() != "y":
+                print("Операция отменена.")
+                return None
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

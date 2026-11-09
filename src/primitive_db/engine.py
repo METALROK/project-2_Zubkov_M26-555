@@ -173,6 +173,9 @@ def handle_delete(metadata: dict, user_input: str):
         return
 
     table_data = delete(table_data, where)
+    if table_data is None:
+        return
+    
     save_table_data(table_name, table_data)
     for record_id in matched_ids:
         print(f'Запись с ID={record_id} успешно удалена из таблицы "{table_name}".')
@@ -208,10 +211,10 @@ def handle_simple_command(metadata: dict, user_input: str):
             create_table(metadata, table_name, columns)
             save_metadata(META_FILE, metadata)
         case ["drop_table", table_name]:
-            existed = table_name in metadata
-            drop_table(metadata, table_name)
-            save_metadata(META_FILE, metadata)
-            if existed:
+            if not _table_exists(metadata, table_name):
+                return
+            if drop_table(metadata, table_name) is not None:
+                save_metadata(META_FILE, metadata)
                 delete_table_data(table_name)
         case ["info", table_name]:
             handle_info(metadata, table_name)
