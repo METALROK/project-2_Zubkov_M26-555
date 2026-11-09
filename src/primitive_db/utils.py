@@ -1,7 +1,7 @@
 import json
 import os
 
-DATA_DIR = "data"
+from primitive_db.constants import DATA_DIR
 
 
 def _load_json(filepath: str, default: dict | list) -> dict:
@@ -66,24 +66,3 @@ def delete_table_data(table_name: str):
         os.remove(_table_path(table_name))
     except FileNotFoundError:
         pass
-
-def create_cacher():
-    """
-    Создаёт функцию кэширования.
-
-    Кэш хранится в замыкании.
-    """
-    cache = {}
-
-    def cache_result(key: str, value_func):
-        """
-        Возвращает результат из кэша или вычисляет его через value_func.
-        """
-        if key in cache:
-            return cache[key]
-        result = value_func()
-        cache[key] = result
-        return result
-
-    cache_result.clear = cache.clear
-    return cache_result

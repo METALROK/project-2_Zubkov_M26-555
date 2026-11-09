@@ -1,6 +1,15 @@
-import functools
 import time
 
+from primitive_db.constants import CONFIRM_ANSWER
+
+
+def _copy_metadata(wrapper, func):
+    """
+    Переносит имя и docstring исходной функции на обёртку.
+    """
+    wrapper.__name__ = func.__name__
+    wrapper.__doc__ = func.__doc__
+    return wrapper
 
 def handle_db_errors(func):
     """
@@ -9,7 +18,6 @@ def handle_db_errors(func):
     При ошибке обёрнутая функция возвращает None.
     """
 
-    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
@@ -26,7 +34,7 @@ def handle_db_errors(func):
             print(f"Произошла непредвиденная ошибка: {error}")
         return None
 
-    return wrapper
+    return _copy_metadata(wrapper, func)
 
 def confirm_action(action_name: str):
     """
@@ -36,26 +44,24 @@ def confirm_action(action_name: str):
     """
 
     def decorator(func):
-        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             answer = input(
                 f'Вы уверены, что хотите выполнить "{action_name}"? [y/n]: '
             )
-            if answer.strip().lower() != "y":
+            if answer.strip().lower() != CONFIRM_ANSWER:
                 print("Операция отменена.")
                 return None
             return func(*args, **kwargs)
 
-        return wrapper
+        return _copy_metadata(wrapper, func)
 
     return decorator
 
 def log_time(func):
-    """
+    """"
     Замеряет время выполнения функции и выводит его в консоль.
     """
 
-    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         start = time.monotonic()
         result = func(*args, **kwargs)
@@ -63,4 +69,25 @@ def log_time(func):
         print(f"Функция {func.__name__} выполнилась за {elapsed:.3f} секунд")
         return result
 
-    return wrapper
+    return _copy_metadata(wrapper, func)
+
+def create_cacher():
+    """
+    Создаёт функцию кэширования.
+
+    Кэш хранится в замыкании.
+    """
+    cache = {}
+
+    def cache_result(key: str, value_func):
+        """
+        Возвращает результат из кэша или вычисляет его через value_func.
+        """
+        if key in cache:
+            return cache[key]
+        result = value_func()
+        cache[key] = result
+        return result
+
+    cache_result.clear = cache.clear
+    return cache_result
