@@ -1,3 +1,5 @@
+from utils import load_table_data
+
 VALID_TYPES = {"int", "str", "bool"}
 
 
@@ -46,3 +48,101 @@ def list_tables(metadata):
 
     for table_name in metadata:
         print(f"- {table_name}")
+
+def convert_value(value: int | str | bool, column_type: str) -> int | str | bool:
+    """
+    Приводит строковое значение к типу столбца.
+
+    При ошибке выбрасывает ValueError.
+    """
+    if column_type == "int":
+        try:
+            return int(value)
+        except ValueError:
+            raise ValueError(value) from None
+
+    if column_type == "bool":
+        lowered = str(value).lower()
+        if lowered == "true":
+            return True
+        if lowered == "false":
+            return False
+        raise ValueError(value)
+
+    return str(value)
+
+def cast_clause(metadata: dict, table_name: str, clause: dict) -> dict:
+    """
+    Проверяет столбцы условия и приводит значения к их типам.
+    """
+    columns = metadata[table_name]
+    result = {}
+    for column, value in clause.items():
+        if column not in columns:
+            raise ValueError(column)
+        result[column] = convert_value(value, columns[column])
+    return result
+
+def _matches(record: dict, where_clause: dict) -> bool:
+    """
+    Проверяет, подходит ли запись под все условия where.
+    """
+    return all(record.get(key) == value for key, value in where_clause.items())
+
+def insert(metadata: dict, table_name: str, values: list) -> list | None:
+    """
+    Добавляет запись.
+
+    Возвращает обновленные данные или Nono при ошибке.
+    """
+    if table_name not in metadata:
+        print(f'Ошибка: Таблица "{table_name}" не существует.')
+        return None
+
+    columns = metadata[table_name]
+    data_columns = [name for name in columns if name != "ID"]
+
+    if len(values) != len(data_columns):
+        print(
+            f"Ошибка: ожидается {len(data_columns)} значений, "
+            f"получено: {len(values)}."
+        )
+        return None
+
+    record = {}
+    for name, value in zip(data_columns, values):
+        try:
+            record[name] = convert_value(value, columns[name])
+        except ValueError:
+            print(f"Некорректное значение: {value}")
+            return None
+
+    table_data = load_table_data(table_name)
+    new_id = max((row["ID"] for row in table_data), default=0) + 1
+    table_data.append({"ID": new_id, **record})
+
+    print(f"Запись с ID={new_id} успешно добавлена в таблицу '{table_name}'.")
+    return table_data
+
+def select(table_data: list, where_clauses: dict=None) -> list:
+    """
+    Возвращает все записи или только подходящие под where_clause.
+    """
+    if not where_clauses:
+        return table_data
+    return [record for record in table_data if _matches(record, where_clauses)]
+
+def update(table_data: list, set_clause: dict, where_clause: dict) -> list:
+    """
+    Обновляет поля из set_clause в записях, подходящих под where_clause.
+    """
+    for record in table_data:
+        if _matches(record, where_clause):
+            record.update(set_clause)
+    return table_data
+
+def delete(table_data: list, where_clause: dict) -> list:
+    """
+    Удаляет записи, подходящие под where_clause.
+    """
+    return [record for record in table_data if not _matches(record, where_clause)]

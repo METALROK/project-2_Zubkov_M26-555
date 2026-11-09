@@ -4,7 +4,7 @@ import os
 DATA_DIR = "data"
 
 
-def _load_json(filepath: str, default: [dict, list]) -> dict:
+def _load_json(filepath: str, default: dict | list) -> dict:
     """
     Загружает JSON-файл.
 
