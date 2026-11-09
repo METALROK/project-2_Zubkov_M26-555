@@ -175,7 +175,7 @@ def handle_delete(metadata: dict, user_input: str):
     table_data = delete(table_data, where)
     if table_data is None:
         return
-    
+
     save_table_data(table_name, table_data)
     for record_id in matched_ids:
         print(f'Запись с ID={record_id} успешно удалена из таблицы "{table_name}".')

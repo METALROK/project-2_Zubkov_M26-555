@@ -1,4 +1,4 @@
-from primitive_db.decorators import confirm_action, handle_db_errors
+from primitive_db.decorators import confirm_action, handle_db_errors, log_time
 from primitive_db.utils import load_table_data
 
 VALID_TYPES = {"int", "str", "bool"}
@@ -85,6 +85,7 @@ def _matches(record: dict, where_clause: dict) -> bool:
     return all(record.get(key) == value for key, value in where_clause.items())
 
 @handle_db_errors
+@log_time
 def insert(metadata: dict, table_name: str, values: list) -> list | None:
     """Добавляет запись. Возвращает обновлённые данные или None при ошибке."""
     if table_name not in metadata:
@@ -113,6 +114,7 @@ def insert(metadata: dict, table_name: str, values: list) -> list | None:
     print(f'Запись с ID={new_id} успешно добавлена в таблицу "{table_name}".')
     return table_data
 
+@log_time
 def select(table_data: list, where_clauses: dict=None) -> list:
     """
     Возвращает все записи или только подходящие под where_clause.

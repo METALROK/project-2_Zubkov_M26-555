@@ -1,4 +1,5 @@
 import functools
+import time
 
 
 def handle_db_errors(func):
@@ -48,3 +49,18 @@ def confirm_action(action_name: str):
         return wrapper
 
     return decorator
+
+def log_time(func):
+    """
+    Замеряет время выполнения функции и выводит его в консоль.
+    """
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.monotonic()
+        result = func(*args, **kwargs)
+        elapsed = time.monotonic() - start
+        print(f"Функция {func.__name__} выполнилась за {elapsed:.3f} секунд")
+        return result
+
+    return wrapper
